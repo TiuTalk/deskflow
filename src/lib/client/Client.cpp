@@ -290,25 +290,6 @@ void Client::setOptions(const OptionsList &options)
 {
   for (auto index = options.begin(); index != options.end(); ++index) {
     const OptionID id = *index;
-    if (id == kOptionClipboardSharing) {
-      index++;
-      if (index != options.end()) {
-        if (!*index) {
-          LOG_NOTE("clipboard sharing disabled by server");
-        }
-        m_enableClipboard = *index;
-      }
-    } else if (id == kOptionClipboardSharingSize) {
-      index++;
-      if (index != options.end()) {
-        m_maximumClipboardSize = *index;
-      }
-    }
-  }
-
-  if (m_enableClipboard && !m_maximumClipboardSize) {
-    m_enableClipboard = false;
-    LOG_NOTE("clipboard sharing is disabled because the server set the maximum clipboard size to 0");
   }
 
   m_screen->setOptions(options);

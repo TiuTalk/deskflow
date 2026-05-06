@@ -116,9 +116,6 @@ void ServerConfig::commit()
   settings().setValue("switchCornerSize", switchCornerSize());
   settings().setValue("defaultLockToScreenState", defaultLockToScreenState());
   settings().setValue("disableLockToScreen", disableLockToScreen());
-  settings().setValue("clipboardSharing", clipboardSharing());
-  settings().setValue("clipboardSharingSize", QVariant::fromValue(clipboardSharingSize()));
-
   writeSettings(settings(), switchCorners(), "switchCorner");
 
   settings().beginWriteArray("screens");
@@ -168,11 +165,6 @@ void ServerConfig::recall()
   setSwitchCornerSize(settings().value("switchCornerSize").toInt());
   setDefaultLockToScreenState(settings().value("defaultLockToScreenState", false).toBool());
   setDisableLockToScreen(settings().value("disableLockToScreen", false).toBool());
-  setClipboardSharingSize(
-      settings().value("clipboardSharingSize", (int)ServerConfig::defaultClipboardSharingSize()).toULongLong()
-  );
-  setClipboardSharing(settings().value("clipboardSharing", true).toBool());
-
   readSettings(settings(), switchCorners(), "switchCorner", false, static_cast<int>(NumSwitchCorners));
 
   int numScreens = settings().beginReadArray("screens");
@@ -269,11 +261,6 @@ QTextStream &operator<<(QTextStream &outStream, const ServerConfig &config)
             << "defaultLockToScreenState = " << (config.defaultLockToScreenState() ? "true" : "false") << Qt::endl;
   outStream << "\t"
             << "disableLockToScreen = " << (config.disableLockToScreen() ? "true" : "false") << Qt::endl;
-  outStream << "\t"
-            << "clipboardSharing = " << (config.clipboardSharing() ? "true" : "false") << Qt::endl;
-  outStream << "\t"
-            << "clipboardSharingSize = " << config.clipboardSharingSize() << Qt::endl;
-
   if (config.hasSwitchDelay())
     outStream << "\t"
               << "switchDelay = " << config.switchDelay() << Qt::endl;

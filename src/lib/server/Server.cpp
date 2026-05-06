@@ -1109,21 +1109,6 @@ void Server::processOptions()
       m_defaultLockToScreenState = (value != 0);
     } else if (id == kOptionDisableLockToScreen) {
       m_disableLockToScreen = (value != 0);
-    } else if (id == kOptionClipboardSharing) {
-      m_enableClipboard = value;
-      if (!m_enableClipboard) {
-        LOG_NOTE("clipboard sharing is disabled");
-      }
-    } else if (id == kOptionClipboardSharingSize) {
-      if (value <= 0) {
-        m_maximumClipboardSize = 0;
-        LOG_NOTE(
-            "clipboard sharing is disabled because the "
-            "maximum shared clipboard size is set to 0"
-        );
-      } else {
-        m_maximumClipboardSize = static_cast<size_t>(value);
-      }
     }
   }
   if (m_relativeMoves && !newRelativeMoves) {

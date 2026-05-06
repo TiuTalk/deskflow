@@ -199,7 +199,7 @@ private:
   std::string m_dataClipboard[kClipboardEnd];
   IEventQueue *m_events = nullptr;
   bool m_useSecureNetwork = false;
-  bool m_enableClipboard = true;
+  bool m_enableClipboard = false;
   size_t m_maximumClipboardSize = INT_MAX;
   size_t m_resolvedAddressesCount = 0;
 };

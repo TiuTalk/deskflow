@@ -672,10 +672,6 @@ void Config::readSectionOptions(ConfigReadContext &s)
       addOption("", kOptionDefaultLockToScreenState, s.parseBoolean(value));
     } else if (name == "disableLockToScreen") {
       addOption("", kOptionDisableLockToScreen, s.parseBoolean(value));
-    } else if (name == "clipboardSharing") {
-      addOption("", kOptionClipboardSharing, s.parseBoolean(value));
-    } else if (name == "clipboardSharingSize") {
-      addOption("", kOptionClipboardSharingSize, s.parseInt(value));
     } else {
       handled = false;
     }

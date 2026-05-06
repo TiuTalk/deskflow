@@ -247,7 +247,7 @@ private:
   int m_SwitchCornerSize = 0;
   bool m_DefaultLockToScreenState = false;
   bool m_DisableLockToScreen = false;
-  bool m_ClipboardSharing = true;
+  bool m_ClipboardSharing = false;
   QString m_ClientAddress = "";
   QList<bool> m_SwitchCorners;
   HotkeyList m_Hotkeys;

@@ -7,11 +7,8 @@
 #include "server/ClientProxy1_5.h"
 
 #include "deskflow/ProtocolUtil.h"
-#include "deskflow/StreamChunker.h"
 #include "io/IStream.h"
 #include "server/Server.h"
-
-#include <cstring>
 
 //
 // ClientProxy1_5
@@ -35,23 +32,5 @@ void ClientProxy1_5::fileChunkSending(uint8_t mark, char *data, size_t dataSize)
 
 bool ClientProxy1_5::parseMessage(const uint8_t *code)
 {
-  if (memcmp(code, kMsgDFileTransfer, 4) == 0) {
-    fileChunkReceived();
-  } else if (memcmp(code, kMsgDDragInfo, 4) == 0) {
-    dragInfoReceived();
-  } else {
-    return ClientProxy1_4::parseMessage(code);
-  }
-
-  return true;
-}
-
-void ClientProxy1_5::fileChunkReceived() const
-{
-  // do nothing
-}
-
-void ClientProxy1_5::dragInfoReceived() const
-{
-  // do nothing
+  return ClientProxy1_4::parseMessage(code);
 }

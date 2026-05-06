@@ -104,8 +104,6 @@ ServerConfigDialog::ServerConfigDialog(QWidget *parent, ServerConfig &config)
   );
 
   connect(ui->cbRelativeMouseMoves, &QCheckBox::toggled, this, &ServerConfigDialog::toggleRelativeMouseMoves);
-  connect(ui->cbEnableClipboard, &QCheckBox::toggled, this, &ServerConfigDialog::toggleClipboard);
-
   connect(ui->btnBrowseConfigFile, &QPushButton::clicked, this, &ServerConfigDialog::browseConfigFile);
 
   ui->groupExternalConfig->setChecked(serverConfig().useExternalConfig());
@@ -119,11 +117,6 @@ ServerConfigDialog::ServerConfigDialog(QWidget *parent, ServerConfig &config)
       ui->sbSwitchCornerSize, QOverload<int>::of(&QSpinBox::valueChanged), this,
       &ServerConfigDialog::setSwitchCornerSize
   );
-  connect(
-      ui->sbClipboardSizeLimit, QOverload<int>::of(&QSpinBox::valueChanged), this,
-      &ServerConfigDialog::setClipboardLimit
-  );
-
   ui->cbCornerTopLeft->setChecked(serverConfig().switchCorner(static_cast<int>(TopLeft)));
   connect(ui->cbCornerTopLeft, &QCheckBox::toggled, this, &ServerConfigDialog::toggleCornerTopLeft);
 
@@ -145,11 +138,6 @@ ServerConfigDialog::ServerConfigDialog(QWidget *parent, ServerConfig &config)
 
   ui->cbDisableLockToScreen->setChecked(serverConfig().disableLockToScreen());
   connect(ui->cbDisableLockToScreen, &QCheckBox::toggled, this, &ServerConfigDialog::toggleLockToScreen);
-
-  ui->cbEnableClipboard->setChecked(serverConfig().clipboardSharing());
-  auto clipboardSharingSizeM = static_cast<int>(serverConfig().clipboardSharingSize() / 1024);
-  ui->sbClipboardSizeLimit->setValue(clipboardSharingSizeM);
-  ui->sbClipboardSizeLimit->setEnabled(serverConfig().clipboardSharing());
 
   for (const Hotkey &hotkey : std::as_const(serverConfig().hotkeys()))
     ui->listHotkeys->addItem(hotkey.text());
@@ -324,23 +312,6 @@ void ServerConfigDialog::removeAction()
 
   hotkey.actions().removeAt(actionRow);
   delete ui->listActions->currentItem();
-  onChange();
-}
-
-void ServerConfigDialog::toggleClipboard(bool enabled)
-{
-  ui->sbClipboardSizeLimit->setEnabled(enabled);
-  if (enabled && !ui->sbClipboardSizeLimit->value()) {
-    auto size = static_cast<int>((ServerConfig::defaultClipboardSharingSize() + 512) / 1024);
-    ui->sbClipboardSizeLimit->setValue(size ? size : 1);
-  }
-  serverConfig().setClipboardSharing(enabled);
-  onChange();
-}
-
-void ServerConfigDialog::setClipboardLimit(int limit)
-{
-  serverConfig().setClipboardSharingSize(limit * 1024);
   onChange();
 }
 
