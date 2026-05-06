@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "deskflow/ClipboardTypes.h"
 #include "deskflow/IScreen.h"
 #include "deskflow/KeyTypes.h"
 #include "deskflow/MouseTypes.h"
@@ -15,7 +14,6 @@
 
 #include <string>
 
-class IClipboard;
 class IPlatformScreen;
 class IEventQueue;
 
@@ -83,19 +81,6 @@ public:
   returning.
   */
   void warpCursor(int32_t x, int32_t y);
-
-  //! Set clipboard
-  /*!
-  Sets the system's clipboard contents.  This is usually called
-  soon after an enter().
-  */
-  void setClipboard(ClipboardID, const IClipboard *);
-
-  //! Grab clipboard
-  /*!
-  Grabs (i.e. take ownership of) the system clipboard.
-  */
-  void grabClipboard(ClipboardID);
 
   //! Activate/deactivate screen saver
   /*!
@@ -270,7 +255,6 @@ public:
 
   // IScreen overrides
   void *getEventTarget() const override;
-  bool getClipboard(ClipboardID id, IClipboard *) const override;
   void getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const override;
   void getCursorPos(int32_t &x, int32_t &y) const override;
 

@@ -20,7 +20,6 @@
 
 #include <X11/Xlib.h>
 
-class XWindowsClipboard;
 class XWindowsKeyState;
 class XWindowsScreenSaver;
 
@@ -38,7 +37,6 @@ public:
 
   // IScreen overrides
   void *getEventTarget() const final;
-  bool getClipboard(ClipboardID id, IClipboard *) const override;
   void getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const override;
   void getCursorPos(int32_t &x, int32_t &y) const override;
 
@@ -66,8 +64,6 @@ public:
   void enter() override;
   bool canLeave() override;
   void leave() override;
-  bool setClipboard(ClipboardID, const IClipboard *) override;
-  void checkClipboards() override;
   void openScreensaver(bool notify) override;
   void closeScreensaver() override;
   void screensaver(bool activate) override;
@@ -86,20 +82,9 @@ protected:
 private:
   // event sending
   void sendEvent(EventTypes, void * = nullptr);
-  void sendClipboardEvent(EventTypes, ClipboardID);
 
   // create the transparent cursor
   Cursor createBlankCursor() const;
-
-  // determine the clipboard from the X selection.  returns
-  // kClipboardEnd if no such clipboard.
-  ClipboardID getClipboardID(Atom selection) const;
-
-  // continue processing a selection request
-  void processClipboardRequest(Window window, Time time, Atom property) const;
-
-  // terminate a selection request
-  void destroyClipboardRequest(Window window) const;
 
   // X I/O error handler
   void onError();
@@ -204,8 +189,6 @@ private:
   KeyCode m_lastKeycode = 0;
   FilteredKeycodes m_filtered;
 
-  // clipboards
-  XWindowsClipboard *m_clipboard[kClipboardEnd];
   uint32_t m_sequenceNumber = 0;
 
   // screen saver stuff

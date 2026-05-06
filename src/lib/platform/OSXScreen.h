@@ -9,7 +9,6 @@
 #pragma once
 
 #include "deskflow/PlatformScreen.h"
-#include "platform/OSXClipboard.h"
 #include "platform/OSXPowerManager.h"
 
 #include <Carbon/Carbon.h>
@@ -55,7 +54,6 @@ public:
 
   // IScreen overrides
   void *getEventTarget() const override;
-  bool getClipboard(ClipboardID id, IClipboard *) const override;
   void getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const override;
   void getCursorPos(int32_t &x, int32_t &y) const override;
 
@@ -83,8 +81,6 @@ public:
   void enter() override;
   bool canLeave() override;
   void leave() override;
-  bool setClipboard(ClipboardID, const IClipboard *) override;
-  void checkClipboards() override;
   void openScreensaver(bool notify) override;
   void closeScreensaver() override;
   void screensaver(bool activate) override;
@@ -109,7 +105,6 @@ private:
 
   // convenience function to send events
   void sendEvent(EventTypes type, void * = nullptr) const;
-  void sendClipboardEvent(EventTypes type, ClipboardID id) const;
 
   // message handlers
   bool onMouseMove();
@@ -251,17 +246,11 @@ private:
   // keyboard stuff
   OSXKeyState *m_keyState;
 
-  // clipboards
-  OSXClipboard m_pasteboard;
   uint32_t m_sequenceNumber;
 
   // screen saver stuff
   OSXScreenSaver *m_screensaver;
   bool m_screensaverNotify;
-
-  // clipboard stuff
-  bool m_ownClipboard;
-  EventQueueTimer *m_clipboardTimer;
 
   EventQueueTimer *m_axTimer;
 

@@ -216,19 +216,6 @@ enum class EventTypes : uint32_t
   */
   ScreenResume,
 
-  /** This event is sent whenever the clipboard is grabbed by some other application so we
-      don't own it anymore. The data is a pointer to a ClipboardInfo.
-  */
-  ClipboardGrabbed,
-
-  /** This event is sent whenever the contents of the clipboard has changed.
-      The data is a pointer to a ClipboardInfo.
-  */
-  ClipboardChanged,
-
-  /// This event is sent whenever a clipboard chunk is transferred.
-  ClipboardSending,
-
   /// Start libei
   EIConnected,
 

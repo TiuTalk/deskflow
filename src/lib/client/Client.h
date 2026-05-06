@@ -12,10 +12,7 @@
 
 #include "base/EventTypes.h"
 #include "common/Enums.h"
-#include "deskflow/IClipboard.h"
 #include "net/NetworkAddress.h"
-
-#include <climits>
 
 class Event;
 class EventQueueTimer;
@@ -131,16 +128,12 @@ public:
 
   // IScreen overrides
   void *getEventTarget() const final;
-  bool getClipboard(ClipboardID id, IClipboard *) const override;
   void getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const override;
   void getCursorPos(int32_t &x, int32_t &y) const override;
 
   // IClient overrides
   void enter(int32_t xAbs, int32_t yAbs, uint32_t seqNum, KeyModifierMask mask, bool forScreensaver) override;
   bool leave() override;
-  void setClipboard(ClipboardID, const IClipboard *) override;
-  void grabClipboard(ClipboardID) override;
-  void setClipboardDirty(ClipboardID, bool) override;
   void keyDown(KeyID, KeyModifierMask, KeyButton, const std::string &) override;
   void keyRepeat(KeyID, KeyModifierMask, int32_t count, KeyButton, const std::string &lang) override;
   void keyUp(KeyID, KeyModifierMask, KeyButton) override;
@@ -155,7 +148,6 @@ public:
   std::string getName() const override;
 
 private:
-  void sendClipboard(ClipboardID);
   void sendEvent(deskflow::EventTypes);
   void sendConnectionFailedEvent(const char *msg);
   void setupConnecting();
@@ -174,11 +166,9 @@ private:
   void handleOutputError();
   void handleDisconnected();
   void handleShapeChanged();
-  void handleClipboardGrabbed(const Event &event);
   void handleHello();
   void handleSuspend();
   void handleResume();
-  void sendClipboardThread(void *);
   void bindNetworkInterface(IDataSocket *socket) const;
 
 private:
@@ -193,13 +183,7 @@ private:
   bool m_active = false;
   bool m_suspended = false;
   bool m_connectOnResume = false;
-  bool m_ownClipboard[kClipboardEnd];
-  bool m_sentClipboard[kClipboardEnd];
-  IClipboard::Time m_timeClipboard[kClipboardEnd];
-  std::string m_dataClipboard[kClipboardEnd];
   IEventQueue *m_events = nullptr;
   bool m_useSecureNetwork = false;
-  bool m_enableClipboard = false;
-  size_t m_maximumClipboardSize = INT_MAX;
   size_t m_resolvedAddressesCount = 0;
 };

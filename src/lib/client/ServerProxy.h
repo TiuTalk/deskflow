@@ -8,14 +8,12 @@
 
 #pragma once
 
-#include "deskflow/ClipboardTypes.h"
 #include "deskflow/KeyTypes.h"
 #include "deskflow/KeyboardLayoutManager.h"
 
 class Client;
 class ClientInfo;
 class EventQueueTimer;
-class IClipboard;
 namespace deskflow {
 class IStream;
 }
@@ -45,8 +43,6 @@ public:
   //@{
 
   void onInfoChanged();
-  bool onGrabClipboard(ClipboardID);
-  void onClipboardChanged(ClipboardID, const IClipboard *);
 
   //@}
 
@@ -80,8 +76,6 @@ private:
   // message handlers
   void enter();
   void leave();
-  void setClipboard();
-  void grabClipboard();
   void keyDown(uint16_t id, uint16_t mask, uint16_t button, const std::string &lang);
   void keyRepeat();
   void keyUp();

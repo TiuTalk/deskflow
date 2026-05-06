@@ -56,7 +56,6 @@ public:
 
   // IScreen overrides
   void *getEventTarget() const override;
-  bool getClipboard(ClipboardID id, IClipboard *) const override;
   void getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const override;
   void getCursorPos(int32_t &x, int32_t &y) const override;
 
@@ -111,8 +110,6 @@ public:
   void enter() override;
   bool canLeave() override;
   void leave() override;
-  bool setClipboard(ClipboardID, const IClipboard *) override;
-  void checkClipboards() override;
   void openScreensaver(bool notify) override;
   void closeScreensaver() override;
   void screensaver(bool activate) override;
@@ -145,9 +142,6 @@ private:
 public: // HACK
   void sendEvent(EventTypes type, void * = nullptr);
 
-private: // HACK
-  void sendClipboardEvent(EventTypes type, ClipboardID id);
-
   // handle message before it gets dispatched.  returns true iff
   // the message should not be dispatched.
   bool onPreDispatch(HWND, UINT, WPARAM, LPARAM);
@@ -173,7 +167,6 @@ private: // HACK
   bool onMouseWheel(int32_t xDelta, int32_t yDelta);
   bool onScreensaver(bool activated);
   bool onDisplayChange();
-  void onClipboardChange();
 
   // warp cursor without discarding queued events
   void warpCursorNoFlush(int32_t x, int32_t y);
@@ -189,9 +182,6 @@ private: // HACK
 
   // fix timer callback
   void handleFixes();
-
-  // fix the clipboard viewer chain
-  void fixClipboardViewer();
 
   // enable/disable special key combinations so we can catch/pass them
   void enableSpecialKeys(bool) const;
@@ -277,7 +267,6 @@ private:
   int32_t m_xCursor = 0;
   int32_t m_yCursor = 0;
 
-  // last clipboard
   uint32_t m_sequenceNumber = 0;
 
   // used to discard queued messages that are no longer needed
@@ -298,11 +287,7 @@ private:
   bool m_screensaverNotify = false;
   bool m_screensaverActive = false;
 
-  // clipboard stuff.  our window is used mainly as a clipboard
-  // owner and as a link in the clipboard viewer chain.
   HWND m_window = nullptr;
-  DWORD m_clipboardSequenceNumber = 0;
-  bool m_ownClipboard = false;
 
   // one desk per desktop and a cond var to communicate with it
   MSWindowsDesks *m_desks = nullptr;

@@ -7,7 +7,6 @@
 
 #pragma once
 
-#include "deskflow/ClipboardTypes.h"
 #include "deskflow/IScreen.h"
 #include "deskflow/KeyTypes.h"
 #include "deskflow/MouseTypes.h"
@@ -32,7 +31,6 @@ public:
   \p mask is the expected toggle button state and the client should
   update its state to match.  \p forScreensaver is true iff the
   screen is being entered because the screen saver is starting.
-  Subsequent clipboard events should report \p seqNum.
   */
   virtual void enter(int32_t xAbs, int32_t yAbs, uint32_t seqNum, KeyModifierMask mask, bool forScreensaver) = 0;
 
@@ -42,30 +40,6 @@ public:
   client's screen (because, for example, a button is down).
   */
   virtual bool leave() = 0;
-
-  //! Set clipboard
-  /*!
-  Update the client's clipboard.  This implies that the client's
-  clipboard is now up to date.  If the client's clipboard was
-  already known to be up to date then this may do nothing.  \c data
-  has marshalled clipboard data.
-  */
-  virtual void setClipboard(ClipboardID, const IClipboard *) = 0;
-
-  //! Grab clipboard
-  /*!
-  Grab (i.e. take ownership of) the client's clipboard.  Since this
-  is called when another client takes ownership of the clipboard it
-  implies that the client's clipboard is out of date.
-  */
-  virtual void grabClipboard(ClipboardID) = 0;
-
-  //! Mark clipboard dirty
-  /*!
-  Mark the client's clipboard as dirty (out of date) or clean (up to
-  date).
-  */
-  virtual void setClipboardDirty(ClipboardID, bool dirty) = 0;
 
   //! Notify of key press
   /*!

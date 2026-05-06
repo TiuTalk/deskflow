@@ -20,16 +20,6 @@ ClientProxy1_5::ClientProxy1_5(const std::string &name, deskflow::IStream *strea
   // do nothing
 }
 
-void ClientProxy1_5::sendDragInfo(uint32_t fileCount, const char *info, size_t size)
-{
-  // do nothing
-}
-
-void ClientProxy1_5::fileChunkSending(uint8_t mark, char *data, size_t dataSize)
-{
-  // do nothing
-}
-
 bool ClientProxy1_5::parseMessage(const uint8_t *code)
 {
   return ClientProxy1_4::parseMessage(code);

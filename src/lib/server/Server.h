@@ -11,13 +11,10 @@
 #include "base/Event.h"
 #include "base/Stopwatch.h"
 #include "common/NetworkProtocol.h"
-#include "deskflow/Clipboard.h"
-#include "deskflow/ClipboardTypes.h"
 #include "deskflow/KeyTypes.h"
 #include "deskflow/MouseTypes.h"
 #include "server/Config.h"
 
-#include <climits>
 #include <map>
 #include <set>
 #include <vector>
@@ -304,8 +301,6 @@ private:
 
   // event handlers
   void handleShapeChanged(BaseClientProxy *client);
-  void handleClipboardGrabbed(const Event &event, BaseClientProxy *client);
-  void handleClipboardChanged(const Event &event, BaseClientProxy *client);
   void handleKeyDownEvent(const Event &event);
   void handleKeyUpEvent(const Event &event);
   void handleKeyRepeatEvent(const Event &event);
@@ -324,7 +319,6 @@ private:
   void handleLockCursorToScreenEvent(const Event &event);
 
   // event processing
-  void onClipboardChanged(const BaseClientProxy *sender, ClipboardID id, uint32_t seqNum);
   void onScreensaver(bool activated);
   void onKeyDown(KeyID, KeyModifierMask, KeyButton, const std::string &, const char *screens);
   void onKeyUp(KeyID, KeyModifierMask, KeyButton, const char *screens);
@@ -359,17 +353,6 @@ private:
   void forceLeaveClient(const BaseClientProxy *client);
 
 private:
-  class ClipboardInfo
-  {
-  public:
-    ClipboardInfo() = default;
-
-  public:
-    Clipboard m_clipboard;
-    std::string m_clipboardData;
-    std::string m_clipboardOwner;
-    uint32_t m_clipboardSeqNum = 0;
-  };
   // Order suggested by clang
 
   // the Primary Screen Client
@@ -398,7 +381,6 @@ private:
   deskflow::Screen *m_screen;
 
   IEventQueue *m_events = nullptr;
-  size_t m_maximumClipboardSize = INT_MAX;
   ClientListener *m_clientListener = nullptr;
   Stopwatch m_switchTwoTapTimer;
 
@@ -414,9 +396,6 @@ private:
   // all old connections that we're waiting to hangup
   using OldClients = std::map<BaseClientProxy *, EventQueueTimer *>;
   OldClients m_oldClients;
-
-  // clipboard cache
-  ClipboardInfo m_clipboards[kClipboardEnd];
 
   // used in hello message sent to the client
   NetworkProtocol m_protocol = NetworkProtocol::Barrier;
@@ -471,5 +450,4 @@ private:
 
   bool m_defaultLockToScreenState = false;
   bool m_disableLockToScreen = false;
-  bool m_enableClipboard = false;
 };

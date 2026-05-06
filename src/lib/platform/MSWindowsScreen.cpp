@@ -19,10 +19,8 @@
 #include "common/Settings.h"
 #include "deskflow/App.h"
 #include "deskflow/ClientApp.h"
-#include "deskflow/Clipboard.h"
 #include "deskflow/KeyMap.h"
 #include "deskflow/ScreenException.h"
-#include "platform/MSWindowsClipboard.h"
 #include "platform/MSWindowsDesks.h"
 #include "platform/MSWindowsEventQueueBuffer.h"
 #include "platform/MSWindowsKeyState.h"
@@ -181,11 +179,6 @@ void MSWindowsScreen::enable()
   m_fixTimer = m_events->newTimer(1.0, nullptr);
   m_events->addHandler(EventTypes::Timer, m_fixTimer, [this](const auto &) { handleFixes(); });
 
-  // install our clipboard snooper
-  if (!AddClipboardFormatListener(m_window)) {
-    LOG_WARN("failed to add the clipboard format listener: %d", GetLastError());
-  }
-
   // track the active desk and (re)install the hooks
   m_desks->enable();
 
@@ -216,11 +209,6 @@ void MSWindowsScreen::disable()
 
   // tell key state
   m_keyState->disable();
-
-  // stop snooping the clipboard
-  if (!RemoveClipboardFormatListener(m_window)) {
-    LOG_WARN("failed to remove the clipboard format listener: %d", GetLastError());
-  }
 
   // uninstall fix timer
   if (m_fixTimer != nullptr) {
@@ -316,44 +304,6 @@ void MSWindowsScreen::leave()
   m_isOnScreen = false;
 }
 
-bool MSWindowsScreen::setClipboard(ClipboardID, const IClipboard *src)
-{
-  MSWindowsClipboard dst(m_window);
-  if (src != nullptr) {
-    // save clipboard data
-    return Clipboard::copy(&dst, src);
-  } else {
-    // assert clipboard ownership
-    if (!dst.open(0)) {
-      return false;
-    }
-    dst.empty();
-    dst.close();
-    return true;
-  }
-}
-
-void MSWindowsScreen::checkClipboards()
-{
-  // if we think we own the clipboard but we don't then somebody
-  // grabbed the clipboard on this screen without us knowing.
-  // tell the server that this screen grabbed the clipboard.
-  //
-  // this works around bugs in the clipboard viewer chain.
-  // sometimes NT will simply never send WM_DRAWCLIPBOARD
-  // messages for no apparent reason and rebooting fixes the
-  // problem.  since we don't want a broken clipboard until the
-  // next reboot we do this double check.  clipboard ownership
-  // won't be reflected on other screens until we leave but at
-  // least the clipboard itself will work.
-  if (m_ownClipboard && !MSWindowsClipboard::isOwnedByDeskflow()) {
-    LOG_DEBUG("clipboard changed: lost ownership and no notification received");
-    m_ownClipboard = false;
-    sendClipboardEvent(EventTypes::ClipboardGrabbed, kClipboardClipboard);
-    sendClipboardEvent(EventTypes::ClipboardGrabbed, kClipboardSelection);
-  }
-}
-
 void MSWindowsScreen::openScreensaver(bool notify)
 {
   assert(m_screensaver != nullptr);
@@ -414,13 +364,6 @@ bool MSWindowsScreen::isPrimary() const
 void *MSWindowsScreen::getEventTarget() const
 {
   return const_cast<MSWindowsScreen *>(this);
-}
-
-bool MSWindowsScreen::getClipboard(ClipboardID, IClipboard *dst) const
-{
-  MSWindowsClipboard src(m_window);
-  Clipboard::copy(dst, &src);
-  return true;
 }
 
 void MSWindowsScreen::getShape(int32_t &x, int32_t &y, int32_t &w, int32_t &h) const
@@ -819,18 +762,6 @@ void MSWindowsScreen::sendEvent(EventTypes type, void *data)
   m_events->addEvent(Event(type, getEventTarget(), data));
 }
 
-void MSWindowsScreen::sendClipboardEvent(EventTypes type, ClipboardID id)
-{
-  ClipboardInfo *info = (ClipboardInfo *)malloc(sizeof(ClipboardInfo));
-  if (info == nullptr) {
-    LOG_ERR("malloc failed on %s:%s", __FILE__, __LINE__);
-    return;
-  }
-  info->m_id = id;
-  info->m_sequenceNumber = m_sequenceNumber;
-  sendEvent(type, info);
-}
-
 void MSWindowsScreen::handleSystemEvent(const Event &event)
 {
   MSG *msg = static_cast<MSG *>(event.getData());
@@ -933,17 +864,6 @@ bool MSWindowsScreen::onPreDispatchPrimary(HWND, UINT message, WPARAM wParam, LP
 bool MSWindowsScreen::onEvent(HWND, UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *result)
 {
   switch (msg) {
-
-  case WM_CLIPBOARDUPDATE: {
-    DWORD clipboardSequenceNumber = GetClipboardSequenceNumber();
-    LOG_DEBUG("clipboard update: sequence number %d, current %d", clipboardSequenceNumber, m_clipboardSequenceNumber);
-
-    if (clipboardSequenceNumber && (clipboardSequenceNumber != m_clipboardSequenceNumber)) {
-      m_clipboardSequenceNumber = clipboardSequenceNumber;
-      onClipboardChange();
-    }
-    return 0; // message processed
-  }
 
   case WM_DISPLAYCHANGE:
     return onDisplayChange();
@@ -1334,23 +1254,6 @@ bool MSWindowsScreen::onDisplayChange()
   return true;
 }
 
-void MSWindowsScreen::onClipboardChange()
-{
-  // now notify client that somebody changed the clipboard (unless
-  // we're the owner).
-  if (!MSWindowsClipboard::isOwnedByDeskflow()) {
-    if (m_ownClipboard) {
-      LOG_DEBUG("clipboard changed: lost ownership");
-      m_ownClipboard = false;
-      sendClipboardEvent(EventTypes::ClipboardGrabbed, kClipboardClipboard);
-      sendClipboardEvent(EventTypes::ClipboardGrabbed, kClipboardSelection);
-    }
-  } else if (!m_ownClipboard) {
-    LOG_DEBUG("clipboard changed: %s owned", kAppId);
-    m_ownClipboard = true;
-  }
-}
-
 void MSWindowsScreen::warpCursorNoFlush(int32_t x, int32_t y)
 {
   // send an event that we can recognize before the mouse warp
@@ -1437,29 +1340,10 @@ void MSWindowsScreen::updateScreenShape()
 
 void MSWindowsScreen::handleFixes()
 {
-  // fix clipboard chain
-  fixClipboardViewer();
-
   // update keys if keyboard layouts have changed
   if (m_keyState->didGroupsChange()) {
     updateKeys();
   }
-}
-
-void MSWindowsScreen::fixClipboardViewer()
-{
-  // XXX -- disable this code for now.  somehow it can cause an infinite
-  // recursion in the WM_DRAWCLIPBOARD handler.  either we're sending
-  // the message to our own window or some window farther down the chain
-  // forwards the message to our window or a window farther up the chain.
-  // i'm not sure how that could happen.  the m_nextClipboardWindow = nullptr
-  // was not in the code that infinite loops and may fix the bug but i
-  // doubt it.
-  /*
-      ChangeClipboardChain(m_window, m_nextClipboardWindow);
-      m_nextClipboardWindow = nullptr;
-      m_nextClipboardWindow = SetClipboardViewer(m_window);
-  */
 }
 
 void MSWindowsScreen::enableSpecialKeys(bool enable) const

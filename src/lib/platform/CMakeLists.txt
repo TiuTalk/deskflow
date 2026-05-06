@@ -22,19 +22,6 @@ endif()
 
 if(WIN32)
   set(PLATFORM_SOURCES
-    IMSWindowsClipboardFacade.h
-    MSWindowsClipboard.cpp
-    MSWindowsClipboard.h
-    MSWindowsClipboardAnyTextConverter.cpp
-    MSWindowsClipboardAnyTextConverter.h
-    MSWindowsClipboardBitmapConverter.cpp
-    MSWindowsClipboardBitmapConverter.h
-    MSWindowsClipboardFacade.cpp
-    MSWindowsClipboardFacade.h
-    MSWindowsClipboardHTMLConverter.cpp
-    MSWindowsClipboardHTMLConverter.h
-    MSWindowsClipboardUTF16Converter.cpp
-    MSWindowsClipboardUTF16Converter.h
     MSWindowsDebugOutputter.cpp
     MSWindowsDebugOutputter.h
     MSWindowsDesks.cpp
@@ -63,22 +50,6 @@ elseif(APPLE)
     IOSXKeyResource.cpp
     IOSXKeyResource.h
     OSXAutoTypes.h
-    OSXClipboard.cpp
-    OSXClipboard.h
-    OSXClipboardAnyBitmapConverter.cpp
-    OSXClipboardAnyBitmapConverter.h
-    OSXClipboardAnyTextConverter.cpp
-    OSXClipboardAnyTextConverter.h
-    OSXClipboardBMPConverter.cpp
-    OSXClipboardBMPConverter.h
-    OSXClipboardHTMLConverter.cpp
-    OSXClipboardHTMLConverter.h
-    OSXClipboardTextConverter.cpp
-    OSXClipboardTextConverter.h
-    OSXClipboardUTF8Converter.cpp
-    OSXClipboardUTF8Converter.h
-    OSXClipboardUTF16Converter.cpp
-    OSXClipboardUTF16Converter.h
     OSXCocoaApp.h
     OSXCocoaApp.m
     OSXEventQueueBuffer.cpp
@@ -87,8 +58,6 @@ elseif(APPLE)
     OSXKeyState.h
     OSXMediaKeySupport.h
     OSXMediaKeySupport.m
-    OSXPasteboardPeeker.h
-    OSXPasteboardPeeker.m
     OSXPowerManager.cpp
     OSXPowerManager.h
     OSXScreen.h
@@ -112,20 +81,6 @@ elseif(UNIX)
   if (BUILD_X11_SUPPORT)
     configure_file(XWindowsConfig.h.in XWindowsConfig.h @ONLY)
     list(APPEND PLATFORM_SOURCES
-      XWindowsClipboard.cpp
-      XWindowsClipboard.h
-      XWindowsClipboardAnyBitmapConverter.cpp
-      XWindowsClipboardAnyBitmapConverter.h
-      XWindowsClipboardBMPConverter.cpp
-      XWindowsClipboardBMPConverter.h
-      XWindowsClipboardHTMLConverter.cpp
-      XWindowsClipboardHTMLConverter.h
-      XWindowsClipboardTextConverter.cpp
-      XWindowsClipboardTextConverter.h
-      XWindowsClipboardUCS2Converter.cpp
-      XWindowsClipboardUCS2Converter.h
-      XWindowsClipboardUTF8Converter.cpp
-      XWindowsClipboardUTF8Converter.h
       XWindowsEventQueueBuffer.cpp
       XWindowsEventQueueBuffer.h
       XWindowsKeyState.cpp
@@ -148,10 +103,6 @@ elseif(UNIX)
       EiKeyState.h
       EiScreen.cpp
       EiScreen.h
-      WlClipboardCollection.cpp
-      WlClipboardCollection.h
-      WlClipboard.cpp
-      WlClipboard.h
     )
     # The Portal sources also require EI.
     if(LIBPORTAL_FOUND)

@@ -48,10 +48,10 @@ void ServerConfigTests::equalityCheck()
   QVERIFY(b.addScreen("screenC"));
   QVERIFY(b.connect("screenA", Direction::Bottom, 0.0f, 0.5f, "screenB", 0.5f, 1.0f));
   QVERIFY(b.connect("screenB", Direction::Left, 0.0f, 0.5f, "screenB", 0.5f, 1.0f));
-  QVERIFY(a.addOption("screenA", kOptionClipboardSharing, 1));
-  QVERIFY(b.addOption("screenA", kOptionClipboardSharing, 1));
-  QVERIFY(a.addOption(std::string(), kOptionClipboardSharing, 1));
-  QVERIFY(b.addOption(std::string(), kOptionClipboardSharing, 1));
+  QVERIFY(a.addOption("screenA", kOptionHeartbeat, 1));
+  QVERIFY(b.addOption("screenA", kOptionHeartbeat, 1));
+  QVERIFY(a.addOption(std::string(), kOptionHeartbeat, 1));
+  QVERIFY(b.addOption(std::string(), kOptionHeartbeat, 1));
 
   a.getInputFilter()->addFilterRule(InputFilter::Rule{new OnlySystemFilter()});
   b.getInputFilter()->addFilterRule(InputFilter::Rule{new OnlySystemFilter()});
@@ -75,8 +75,8 @@ void ServerConfigTests::equalityCheck_diff_options()
 
   QVERIFY(a.addScreen("screenA"));
   QVERIFY(b.addScreen("screenA"));
-  QVERIFY(a.addOption("screenA", kOptionClipboardSharing, 0));
-  QVERIFY(b.addOption("screenA", kOptionClipboardSharing, 1));
+  QVERIFY(a.addOption("screenA", kOptionHeartbeat, 0));
+  QVERIFY(b.addOption("screenA", kOptionHeartbeat, 1));
   QVERIFY(a != b);
 }
 

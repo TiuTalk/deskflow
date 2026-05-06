@@ -23,12 +23,9 @@ struct ei_device;
 
 namespace deskflow {
 
-class WlClipboardCollection;
 class EiKeyState;
 class PortalRemoteDesktop;
 class PortalInputCapture;
-
-using ClipboardInfo = IScreen::ClipboardInfo;
 
 //! Implementation of IPlatformScreen for X11
 class EiScreen : public PlatformScreen
@@ -39,7 +36,6 @@ public:
 
   // IScreen overrides
   void *getEventTarget() const final;
-  bool getClipboard(ClipboardID id, IClipboard *) const override;
   void getShape(std::int32_t &x, std::int32_t &y, std::int32_t &width, std::int32_t &height) const override;
   void getCursorPos(std::int32_t &x, std::int32_t &y) const override;
 
@@ -68,8 +64,6 @@ public:
   void enter() override;
   bool canLeave() override;
   void leave() override;
-  bool setClipboard(ClipboardID, const IClipboard *) override;
-  void checkClipboards() override;
   void openScreensaver(bool notify) override;
   void closeScreensaver() override;
   void screensaver(bool activate) override;
@@ -93,7 +87,6 @@ private:
   void initEi();
   void cleanupEi();
   void sendEvent(EventTypes type, void *data);
-  void sendClipboardEvent(EventTypes type, ClipboardID id) const;
   ButtonID mapButtonFromEvdev(ei_event *event) const;
   void onKeyEvent(ei_event *event);
   void onButtonEvent(ei_event *event);
@@ -123,9 +116,6 @@ private:
   EiKeyState *m_keyState = nullptr;
 
   KeyID m_lastPressed = kKeyNone;
-
-  // clipboard stuff
-  WlClipboardCollection *m_clipboard = nullptr;
 
   std::vector<ei_device *> m_eiDevices;
 

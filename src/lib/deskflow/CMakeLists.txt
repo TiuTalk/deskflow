@@ -28,22 +28,13 @@ add_library(${lib_name} STATIC ${PLATFORM_CODE}
   App.h
   AppUtil.cpp
   AppUtil.h
-  Chunk.cpp
-  Chunk.h
   ClientApp.cpp
   ClientApp.h
-  ClipboardTypes.h
-  Clipboard.cpp
-  Clipboard.h
-  ClipboardChunk.cpp
-  ClipboardChunk.h
   DeskflowException.cpp
   DeskflowException.h
   DisplayInvalidException.h
   IApp.h
   IClient.h
-  IClipboard.cpp
-  IClipboard.h
   IKeyState.cpp
   IKeyState.h
   IPlatformScreen.cpp
@@ -75,8 +66,6 @@ add_library(${lib_name} STATIC ${PLATFORM_CODE}
   ScreenException.h
   ServerApp.cpp
   ServerApp.h
-  StreamChunker.cpp
-  StreamChunker.h
   KeyboardLayoutManager.cpp
   KeyboardLayoutManager.h
   ipc/IpcServer.cpp

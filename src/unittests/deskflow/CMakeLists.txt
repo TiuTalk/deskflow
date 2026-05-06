@@ -6,22 +6,6 @@ if(WIN32)
 endif()
 
 create_test(
-  NAME ClipboardTests
-  DEPENDS app
-  LIBS arch base io ${extra_libs}
-  SOURCE ClipboardTests.cpp
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/src/lib/deskflow"
-)
-
-create_test(
-  NAME ClipboardChunksTests
-  DEPENDS app
-  LIBS arch base io ${extra_libs}
-  SOURCE ClipboardChunksTests.cpp
-  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/src/lib/deskflow"
-)
-
-create_test(
   NAME IKeyStateTests
   DEPENDS app
   LIBS arch base ${extra_libs}

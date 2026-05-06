@@ -8,14 +8,11 @@
 
 #pragma once
 
-#include "deskflow/ClipboardTypes.h"
 #include "deskflow/IKeyState.h"
 #include "deskflow/IPrimaryScreen.h"
 #include "deskflow/IScreen.h"
 #include "deskflow/ISecondaryScreen.h"
 #include "deskflow/OptionTypes.h"
-
-class IClipboard;
 
 //! Screen interface
 /*!
@@ -70,20 +67,6 @@ public:
   by canLeave().
   */
   virtual void leave() = 0;
-
-  //! Set clipboard
-  /*!
-  Set the contents of the system clipboard indicated by \c id.
-  */
-  virtual bool setClipboard(ClipboardID id, const IClipboard *) = 0;
-
-  //! Check clipboard owner
-  /*!
-  Check ownership of all clipboards and post grab events for any that
-  have changed.  This is used as a backup in case the system doesn't
-  reliably report clipboard ownership changes.
-  */
-  virtual void checkClipboards() = 0;
 
   //! Open screen saver
   /*!

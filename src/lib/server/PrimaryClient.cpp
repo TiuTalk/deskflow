@@ -74,11 +74,6 @@ void *PrimaryClient::getEventTarget() const
   return m_screen->getEventTarget();
 }
 
-bool PrimaryClient::getClipboard(ClipboardID id, IClipboard *clipboard) const
-{
-  return m_screen->getClipboard(id, clipboard);
-}
-
 void PrimaryClient::getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const
 {
   m_screen->getShape(x, y, width, height);
@@ -111,32 +106,6 @@ void PrimaryClient::enter(int32_t xAbs, int32_t yAbs, uint32_t seqNum, KeyModifi
 bool PrimaryClient::leave()
 {
   return m_screen->leave();
-}
-
-void PrimaryClient::setClipboard(ClipboardID id, const IClipboard *clipboard)
-{
-  // ignore if this clipboard is already clean
-  if (m_clipboardDirty[id]) {
-    // this clipboard is now clean
-    m_clipboardDirty[id] = false;
-
-    // set clipboard
-    m_screen->setClipboard(id, clipboard);
-  }
-}
-
-void PrimaryClient::grabClipboard(ClipboardID id)
-{
-  // grab clipboard
-  m_screen->grabClipboard(id);
-
-  // clipboard is dirty (because someone else owns it now)
-  m_clipboardDirty[id] = true;
-}
-
-void PrimaryClient::setClipboardDirty(ClipboardID id, bool dirty)
-{
-  m_clipboardDirty[id] = dirty;
 }
 
 void PrimaryClient::keyDown(KeyID key, KeyModifierMask mask, KeyButton button, const std::string &)
@@ -192,16 +161,6 @@ void PrimaryClient::mouseWheel(int32_t, int32_t)
 }
 
 void PrimaryClient::screensaver(bool)
-{
-  // ignore
-}
-
-void PrimaryClient::sendDragInfo(uint32_t fileCount, const char *info, size_t size)
-{
-  // ignore
-}
-
-void PrimaryClient::fileChunkSending(uint8_t mark, char *data, size_t dataSize)
 {
   // ignore
 }

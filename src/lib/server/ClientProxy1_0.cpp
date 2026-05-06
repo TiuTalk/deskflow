@@ -175,10 +175,6 @@ bool ClientProxy1_0::parseMessage(const uint8_t *code)
     // discard no-ops
     LOG_DEBUG2("no-op from", getName().c_str());
     return true;
-  } else if (memcmp(code, kMsgCClipboard, 4) == 0) {
-    return recvGrabClipboard();
-  } else if (memcmp(code, kMsgDClipboard, 4) == 0) {
-    return recvClipboard();
   }
   return false;
 }
@@ -200,12 +196,6 @@ void ClientProxy1_0::handleFlatline()
   // didn't get a heartbeat fast enough.  assume client is dead.
   LOG_DEBUG("client \"%s\" is dead", getName().c_str());
   disconnect();
-}
-
-bool ClientProxy1_0::getClipboard(ClipboardID id, IClipboard *clipboard) const
-{
-  Clipboard::copy(clipboard, &m_clipboard[id].m_clipboard);
-  return true;
 }
 
 void ClientProxy1_0::getShape(int32_t &x, int32_t &y, int32_t &w, int32_t &h) const
@@ -236,25 +226,6 @@ bool ClientProxy1_0::leave()
 
   // we can never prevent the user from leaving
   return true;
-}
-
-void ClientProxy1_0::setClipboard(ClipboardID id, const IClipboard *clipboard)
-{
-  // ignore -- deprecated in protocol 1.0
-}
-
-void ClientProxy1_0::grabClipboard(ClipboardID id)
-{
-  LOG_DEBUG("send grab clipboard %d to \"%s\"", id, getName().c_str());
-  ProtocolUtil::writef(getStream(), kMsgCClipboard, id, 0);
-
-  // this clipboard is now dirty
-  m_clipboard[id].m_dirty = true;
-}
-
-void ClientProxy1_0::setClipboardDirty(ClipboardID id, bool dirty)
-{
-  m_clipboard[id].m_dirty = dirty;
 }
 
 void ClientProxy1_0::keyDown(KeyID key, KeyModifierMask mask, KeyButton, const std::string &)
@@ -303,18 +274,6 @@ void ClientProxy1_0::mouseWheel(int32_t, int32_t yDelta)
   // clients prior to 1.3 only support the y axis
   LOG_DEBUG2("send mouse wheel to \"%s\" %+d", getName().c_str(), yDelta);
   ProtocolUtil::writef(getStream(), kMsgDMouseWheel1_0, yDelta);
-}
-
-void ClientProxy1_0::sendDragInfo(uint32_t, const char *, size_t)
-{
-  // ignore -- not supported in protocol 1.0
-  LOG_DEBUG("draggingInfoSending not supported");
-}
-
-void ClientProxy1_0::fileChunkSending(uint8_t, char *, size_t)
-{
-  // ignore -- not supported in protocol 1.0
-  LOG_DEBUG("fileChunkSending not supported");
 }
 
 std::string ClientProxy1_0::getSecureInputApp() const
@@ -404,32 +363,3 @@ bool ClientProxy1_0::recvInfo()
   return true;
 }
 
-bool ClientProxy1_0::recvClipboard()
-{
-  // deprecated in protocol 1.0
-  return false;
-}
-
-bool ClientProxy1_0::recvGrabClipboard()
-{
-  // parse message
-  ClipboardID id;
-  uint32_t seqNum;
-  if (!ProtocolUtil::readf(getStream(), kMsgCClipboard + 4, &id, &seqNum)) {
-    return false;
-  }
-  LOG_DEBUG("received client \"%s\" grabbed clipboard %d seqnum=%d", getName().c_str(), id, seqNum);
-
-  // validate
-  if (id >= kClipboardEnd) {
-    return false;
-  }
-
-  // notify
-  auto *info = new ClipboardInfo;
-  info->m_id = id;
-  info->m_sequenceNumber = seqNum;
-  m_events->addEvent(Event(EventTypes::ClipboardGrabbed, getEventTarget(), info));
-
-  return true;
-}

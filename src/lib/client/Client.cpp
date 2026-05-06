@@ -14,13 +14,11 @@
 #include "client/ServerProxy.h"
 #include "common/NetworkProtocol.h"
 #include "common/Settings.h"
-#include "deskflow/Clipboard.h"
 #include "deskflow/IPlatformScreen.h"
 #include "deskflow/PacketStreamFilter.h"
 #include "deskflow/ProtocolTypes.h"
 #include "deskflow/ProtocolUtil.h"
 #include "deskflow/Screen.h"
-#include "deskflow/StreamChunker.h"
 #include "deskflow/ipc/CoreIpc.h"
 #include "net/IDataSocket.h"
 #include "net/ISocketFactory.h"
@@ -177,11 +175,6 @@ void *Client::getEventTarget() const
   return m_screen->getEventTarget();
 }
 
-bool Client::getClipboard(ClipboardID id, IClipboard *clipboard) const
-{
-  return m_screen->getClipboard(id, clipboard);
-}
-
 void Client::getShape(int32_t &x, int32_t &y, int32_t &w, int32_t &h) const
 {
   m_screen->getShape(x, y, w, h);
@@ -205,35 +198,7 @@ bool Client::leave()
 
   m_screen->leave();
 
-  if (m_enableClipboard) {
-    // send clipboards that we own and that have changed
-    for (ClipboardID id = 0; id < kClipboardEnd; ++id) {
-      if (m_ownClipboard[id]) {
-        sendClipboard(id);
-      }
-    }
-  }
-
   return true;
-}
-
-void Client::setClipboard(ClipboardID id, const IClipboard *clipboard)
-{
-  m_screen->setClipboard(id, clipboard);
-  m_ownClipboard[id] = false;
-  m_sentClipboard[id] = false;
-}
-
-void Client::grabClipboard(ClipboardID id)
-{
-  m_screen->grabClipboard(id);
-  m_ownClipboard[id] = false;
-  m_sentClipboard[id] = false;
-}
-
-void Client::setClipboardDirty(ClipboardID, bool)
-{
-  assert(0 && "shouldn't be called");
 }
 
 void Client::keyDown(KeyID id, KeyModifierMask mask, KeyButton button, const std::string &lang)
@@ -300,46 +265,6 @@ std::string Client::getName() const
   return m_name;
 }
 
-void Client::sendClipboard(ClipboardID id)
-{
-  // note -- m_mutex must be locked on entry
-  assert(m_screen != nullptr);
-  assert(m_server != nullptr);
-
-  // get clipboard data.  set the clipboard time to the last
-  // clipboard time before getting the data from the screen
-  // as the screen may detect an unchanged clipboard and
-  // avoid copying the data.
-  Clipboard clipboard;
-  if (clipboard.open(m_timeClipboard[id])) {
-    clipboard.close();
-  }
-  m_screen->getClipboard(id, &clipboard);
-
-  // check time
-  if (m_timeClipboard[id] == 0 || clipboard.getTime() != m_timeClipboard[id]) {
-    // marshall the data
-    std::string data = clipboard.marshall();
-    if (data.size() >= m_maximumClipboardSize * 1024) {
-      LOG(
-          (CLOG_NOTE "skipping clipboard transfer because the clipboard"
-                     " contents exceeds the %i MB size limit set by the server",
-           m_maximumClipboardSize / 1024)
-      );
-      return;
-    }
-
-    // save new time
-    m_timeClipboard[id] = clipboard.getTime();
-    // save and send data if different or not yet sent
-    if (!m_sentClipboard[id] || data != m_dataClipboard[id]) {
-      m_sentClipboard[id] = true;
-      m_dataClipboard[id] = data;
-      m_server->onClipboardChanged(id, &clipboard);
-    }
-  }
-}
-
 void Client::sendEvent(EventTypes type)
 {
   m_events->addEvent(Event(type, getEventTarget()));
@@ -401,9 +326,6 @@ void Client::setupScreen()
   m_events->addHandler(EventTypes::ScreenShapeChanged, getEventTarget(), [this](const auto &) {
     handleShapeChanged();
   });
-  m_events->addHandler(EventTypes::ClipboardGrabbed, getEventTarget(), [this](const auto &e) {
-    handleClipboardGrabbed(e);
-  });
 }
 
 void Client::setupTimer()
@@ -451,7 +373,6 @@ void Client::cleanupScreen()
       m_ready = false;
     }
     m_events->removeHandler(EventTypes::ScreenShapeChanged, getEventTarget());
-    m_events->removeHandler(EventTypes::ClipboardGrabbed, getEventTarget());
     delete m_server;
     m_server = nullptr;
   }
@@ -478,12 +399,6 @@ void Client::handleConnected()
   cleanupConnecting();
   setupConnection();
 
-  // reset clipboard state
-  for (ClipboardID id = 0; id < kClipboardEnd; ++id) {
-    m_ownClipboard[id] = false;
-    m_sentClipboard[id] = false;
-    m_timeClipboard[id] = 0;
-  }
 }
 
 void Client::handleConnectionFailed(const Event &event)
@@ -530,29 +445,6 @@ void Client::handleShapeChanged()
 {
   LOG_DEBUG("resolution changed");
   m_server->onInfoChanged();
-}
-
-void Client::handleClipboardGrabbed(const Event &event)
-{
-  if (!m_enableClipboard || (m_maximumClipboardSize == 0)) {
-    return;
-  }
-
-  const auto *info = static_cast<const IScreen::ClipboardInfo *>(event.getData());
-
-  // grab ownership
-  m_server->onGrabClipboard(info->m_id);
-
-  // we now own the clipboard and it has not been sent to the server
-  m_ownClipboard[info->m_id] = true;
-  m_sentClipboard[info->m_id] = false;
-  m_timeClipboard[info->m_id] = 0;
-
-  // if we're not the active screen then send the clipboard now,
-  // otherwise we'll wait until we leave.
-  if (!m_active) {
-    sendClipboard(info->m_id);
-  }
 }
 
 void Client::handleHello()

@@ -147,37 +147,6 @@ static constexpr uint32_t PROTOCOL_MAX_STRING_LENGTH = 1024 * 1024;
  * @{
  */
 
-/**
- * @brief File transfer data chunk types
- *
- * Used in kMsgDFileTransfer messages to indicate the type of data
- * being transferred in each chunk. Used in clipboard operations.
- *
- * @since Protocol version 1.5
- */
-struct ChunkType
-{
-  inline static const auto DataStart = 1; ///< Start of transfer (contains file size)
-  inline static const auto DataChunk = 2; ///< Data chunk (contains file content)
-  inline static const auto DataEnd = 3;   ///< End of transfer (transfer complete)
-};
-
-/**
- * @brief Data reception state codes
- *
- * Used internally to track the state of data reception
- * during clipboard operations.
- *
- * @since Protocol version 1.5
- */
-enum class TransferState : uint8_t
-{
-  Started,    ///< Reception started
-  InProgress, ///< Reception in progress
-  Finished,   ///< Reception completed successfully
-  Error       ///< Reception failed with error
-};
-
 /** @} */ // end of protocol_enums group
 
 /**
@@ -369,41 +338,9 @@ extern const char *const kMsgCEnter;
  * 2. Only send clipboards that have changed since the last leave
  * 3. Use the sequence number from the most recent kMsgCEnter
  *
- * @see kMsgCEnter, kMsgCClipboard
  * @since Protocol version 1.0
  */
 extern const char *const kMsgCLeave;
-
-/**
- * @brief Clipboard grab notification
- *
- * **Message Code**: `"CCLP"`
- * **Direction**: Primary ↔ Secondary
- * **Format**: `"CCLP%1i%4i"`
- * **Parameters**:
- * - `$1`: Clipboard identifier (1 byte)
- * - `$2`: Sequence number (4 bytes)
- *
- * **Example**:
- *
- * Primary clipboard grabbed, sequence 1
- * ```
- * "CCLP\x00\x00\x00\x00\x01"
- * ```
- *
- * Sent when an application grabs a clipboard on either screen.
- * This notifies the other screen that clipboard ownership has changed.
- * Secondary screens must use the sequence number from the most recent
- * kMsgCEnter. The primary always sends sequence number 0.
- *
- * **Clipboard Identifiers**:
- * - `0`: Primary clipboard (Ctrl+C/Ctrl+V)
- * - `1`: Selection clipboard (middle-click on X11)
- *
- * @see kMsgDClipboard
- * @since Protocol version 1.0
- */
-extern const char *const kMsgCClipboard;
 
 /**
  * @brief Screensaver state change
@@ -866,53 +803,6 @@ extern const char *const kMsgDMouseWheel1_0;
 /** @} */ // end of protocol_mouse group
 
 /**
- * @defgroup protocol_clipboard Clipboard Messages
- * @brief Clipboard data synchronization messages
- * @{
- */
-
-/**
- * @brief Clipboard data transfer
- *
- * **Message Code**: `"DCLP"`
- * **Direction**: Primary ↔ Secondary
- * **Format**: `"DCLP%1i%4i%1i%s"`
- * **Parameters**:
- * - `$1`: Clipboard identifier (1 byte)
- * - `$2`: Sequence number (4 bytes)
- * - `$3`: Mark/flags (1 byte) - For streaming support (v1.6+)
- * - `$4`: Clipboard data (string)
- *
- * **Example**:
- *
- * Primary clipboard, sequence 1, no flags, text "Hello World"
- * ```
- * "DCLP\x00\x00\x00\x00\x01\x00\x00\x00\x00\x0BHello World"
- * ```
- *
- * **Clipboard Identifiers**:
- * - `0`: Primary clipboard (Ctrl+C/Ctrl+V)
- * - `1`: Selection clipboard (middle-click on X11)
- *
- * **Sequence Numbers**:
- * - Primary always sends sequence number 0
- * - Secondary uses sequence number from most recent kMsgCEnter
- *
- * **Streaming (v1.6+)**:
- * For large clipboard data, the mark byte enables chunked transfer:
- * - `0`: Single chunk (complete data)
- * - `1`: First chunk of multi-chunk transfer
- * - `2`: Middle chunk
- * - `3`: Final chunk
- *
- * @see kMsgCClipboard
- * @since Protocol version 1.0
- */
-extern const char *const kMsgDClipboard;
-
-/** @} */ // end of protocol_clipboard group
-
-/**
  * @defgroup protocol_info Information Messages
  * @brief Screen information and configuration messages
  * @{
@@ -982,84 +872,6 @@ extern const char *const kMsgDInfo;
 extern const char *const kMsgDSetOptions;
 
 /** @} */ // end of protocol_info group
-
-/**
- * @defgroup protocol_files File Transfer Messages
- * @brief File transfer and drag-and-drop messages (v1.5+)
- * @{
- */
-
-/**
- * @brief File transfer data
- *
- * **Message Code**: `"DFTR"`
- * **Direction**: Primary ↔ Secondary
- * **Format**: `"DFTR%1i%s"`
- * **Parameters**:
- * - `$1`: Transfer mark (1 byte) - Transfer state
- * - `$2`: Data (string) - Content depends on mark
- *
- * **Transfer Marks**:
- * - `1` (kDataStart): Data contains file size (8 bytes)
- * - `2` (kDataChunk): Data contains file content chunk
- * - `3` (kDataEnd): Transfer complete (data may be empty)
- *
- * **Example Transfer Sequence**:
- *
- * Send 4096 bytes
- * ```
- * "DFTR\x01\x00\x00\x00\x00\x00\x00\x10\x00"
- * "DFTR\x02[1024 bytes of file data]"
- * "DFTR\x02[1024 bytes of file data]"
- * "DFTR\x02[1024 bytes of file data]"
- * "DFTR\x02[1024 bytes of file data]"
- * "DFTR\x03"
- * ```
- *
- * **Protocol Flow**:
- * 1. Sender initiates with kDataStart containing total file size
- * 2. Sender sends multiple kDataChunk messages with file content
- * 3. Sender concludes with kDataEnd to signal completion
- * 4. Receiver can abort by closing connection
- *
- * @see kMsgDDragInfo, EDataTransfer
- * @since Protocol version 1.5
- * @deprecated File drag and drop is no longer implemented.
- */
-extern const char *const kMsgDFileTransfer;
-
-/**
- * @brief Drag and drop information
- *
- * **Message Code**: `"DDRG"`
- * **Direction**: Primary ↔ Secondary
- * **Format**: `"DDRG%2i%s"`
- * **Parameters**:
- * - `$1`: Number of files (2 bytes)
- * - `$2`: File paths (string) - Null-separated file paths
- *
- * **Example**:
- *
- * Dragging 2 files
- * ``` * "DDRG\x00\x02/path/to/file1.txt\x00/path/to/file2.txt\x00"
- * ```
- *
- * Sent when a drag-and-drop operation begins. Contains the list
- * of files being dragged. The actual file transfer follows using
- * kMsgDFileTransfer messages.
- *
- * **File Path Format**:
- * - Paths are null-terminated strings
- * - Multiple paths are concatenated with null separators
- * - Paths should use forward slashes for compatibility
- *
- * @see kMsgDFileTransfer
- * @since Protocol version 1.5
- * @deprecated File drag and drop is no longer implemented.
- */
-extern const char *const kMsgDDragInfo;
-
-/** @} */ // end of protocol_files group
 
 /**
  * @defgroup protocol_system System Messages

@@ -24,7 +24,6 @@ public:
 
   // IScreen overrides
   void *getEventTarget() const override = 0;
-  bool getClipboard(ClipboardID id, IClipboard *) const override = 0;
   void getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const override = 0;
   void getCursorPos(int32_t &x, int32_t &y) const override = 0;
 
@@ -68,8 +67,6 @@ public:
   void enter() override = 0;
   bool canLeave() override = 0;
   void leave() override = 0;
-  bool setClipboard(ClipboardID, const IClipboard *) override = 0;
-  void checkClipboards() override = 0;
   void openScreensaver(bool notify) override = 0;
   void closeScreensaver() override = 0;
   void screensaver(bool activate) override = 0;

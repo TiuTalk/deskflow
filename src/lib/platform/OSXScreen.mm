@@ -19,18 +19,15 @@
 #include "common/ExitCodes.h"
 #include "common/Settings.h"
 #include "deskflow/ClientApp.h"
-#include "deskflow/Clipboard.h"
 #include "deskflow/DisplayInvalidException.h"
 #include "deskflow/KeyMap.h"
 #include "mt/CondVar.h"
 #include "mt/Lock.h"
 #include "mt/Mutex.h"
 #include "mt/Thread.h"
-#include "platform/OSXClipboard.h"
 #include "platform/OSXEventQueueBuffer.h"
 #include "platform/OSXKeyState.h"
 #include "platform/OSXMediaKeySupport.h"
-#include "platform/OSXPasteboardPeeker.h"
 #include "platform/OSXScreenSaver.h"
 
 #include <AppKit/NSEvent.h>
@@ -88,8 +85,6 @@ OSXScreen::OSXScreen(IEventQueue *events, bool isPrimary, bool enableLangSync)
       m_sequenceNumber(0),
       m_screensaver(nullptr),
       m_screensaverNotify(false),
-      m_ownClipboard(false),
-      m_clipboardTimer(nullptr),
       m_axTimer(nullptr),
       m_hiddenWindow(nullptr),
       m_userInputWindow(nullptr),
@@ -220,12 +215,6 @@ OSXScreen::~OSXScreen()
 void *OSXScreen::getEventTarget() const
 {
   return const_cast<OSXScreen *>(this);
-}
-
-bool OSXScreen::getClipboard(ClipboardID, IClipboard *dst) const
-{
-  Clipboard::copy(dst, &m_pasteboard);
-  return true;
 }
 
 void OSXScreen::getShape(int32_t &x, int32_t &y, int32_t &w, int32_t &h) const
@@ -658,10 +647,6 @@ void OSXScreen::hideCursor()
 
 void OSXScreen::enable()
 {
-  // watch the clipboard
-  m_clipboardTimer = m_events->newTimer(1.0, nullptr);
-  m_events->addHandler(EventTypes::Timer, m_clipboardTimer, [this](const auto &) { checkClipboards(); });
-
   m_axTimer = m_events->newTimer(1.0, nullptr);
   m_events->addHandler(EventTypes::Timer, m_axTimer, [this](const auto &) { checkAXPermissions(); });
 
@@ -740,12 +725,6 @@ void OSXScreen::disable()
   }
   // FIXME -- allow system to enter power saving mode
 
-  if (m_clipboardTimer != nullptr) {
-    m_events->removeHandler(EventTypes::Timer, m_clipboardTimer);
-    m_events->deleteTimer(m_clipboardTimer);
-    m_clipboardTimer = nullptr;
-  }
-
   if (m_axTimer != nullptr) {
     m_events->removeHandler(EventTypes::Timer, m_axTimer);
     m_events->deleteTimer(m_axTimer);
@@ -796,25 +775,6 @@ void OSXScreen::leave()
   m_isOnScreen = false;
 }
 
-bool OSXScreen::setClipboard(ClipboardID, const IClipboard *src)
-{
-  if (src != nullptr) {
-    LOG_DEBUG("setting clipboard");
-    Clipboard::copy(&m_pasteboard, src);
-  }
-  return true;
-}
-
-void OSXScreen::checkClipboards()
-{
-  LOG_DEBUG2("checking clipboard");
-  if (m_pasteboard.synchronize()) {
-    LOG_DEBUG("clipboard changed");
-    sendClipboardEvent(EventTypes::ClipboardGrabbed, kClipboardClipboard);
-    sendClipboardEvent(EventTypes::ClipboardGrabbed, kClipboardSelection);
-  }
-}
-
 void OSXScreen::openScreensaver(bool notify)
 {
   m_screensaverNotify = notify;
@@ -862,14 +822,6 @@ bool OSXScreen::isPrimary() const
 void OSXScreen::sendEvent(EventTypes type, void *data) const
 {
   m_events->addEvent(Event(type, getEventTarget(), data));
-}
-
-void OSXScreen::sendClipboardEvent(EventTypes type, ClipboardID id) const
-{
-  ClipboardInfo *info = (ClipboardInfo *)malloc(sizeof(ClipboardInfo));
-  info->m_id = id;
-  info->m_sequenceNumber = m_sequenceNumber;
-  sendEvent(type, info);
 }
 
 void OSXScreen::handleSystemEvent(const Event &event)

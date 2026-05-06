@@ -68,9 +68,7 @@ bool ServerConfig::operator==(const ServerConfig &sc) const
          m_SwitchCorners == sc.m_SwitchCorners &&                       //
          m_Hotkeys == sc.m_Hotkeys &&                                   //
          m_DefaultLockToScreenState == sc.m_DefaultLockToScreenState && //
-         m_DisableLockToScreen == sc.m_DisableLockToScreen &&           //
-         m_ClipboardSharing == sc.m_ClipboardSharing &&                 //
-         m_ClipboardSharingSize == sc.m_ClipboardSharingSize;
+         m_DisableLockToScreen == sc.m_DisableLockToScreen;
 }
 
 void ServerConfig::save(QFile &file) const
@@ -400,26 +398,6 @@ bool ServerConfig::fixNoServer(const QString &name, int &index)
   }
 
   return fixed;
-}
-
-size_t ServerConfig::defaultClipboardSharingSize()
-{
-  return 3 * 1024; // 3 MiB
-}
-
-size_t ServerConfig::setClipboardSharingSize(size_t size)
-{
-  if (size) {
-    size += 512; // Round up to the nearest megabyte
-    size /= 1024;
-    size *= 1024;
-    setClipboardSharing(true);
-  } else {
-    setClipboardSharing(false);
-  }
-  using std::swap;
-  swap(size, m_ClipboardSharingSize);
-  return size;
 }
 
 QSettingsProxy &ServerConfig::settings()

@@ -11,13 +11,10 @@
 #include "base/IEventQueue.h"
 #include "base/Log.h"
 #include "client/Client.h"
-#include "deskflow/Clipboard.h"
-#include "deskflow/ClipboardChunk.h"
 #include "deskflow/DeskflowException.h"
 #include "deskflow/OptionTypes.h"
 #include "deskflow/ProtocolTypes.h"
 #include "deskflow/ProtocolUtil.h"
-#include "deskflow/StreamChunker.h"
 #include "deskflow/ipc/CoreIpc.h"
 #include "io/IStream.h"
 
@@ -43,10 +40,6 @@ ServerProxy::ServerProxy(Client *client, deskflow::IStream *stream, IEventQueue 
   m_events->addHandler(EventTypes::StreamInputReady, m_stream->getEventTarget(), [this](const auto &) {
     handleData();
   });
-  m_events->addHandler(EventTypes::ClipboardSending, this, [this](const auto &e) {
-    ClipboardChunk::send(m_stream, e.getDataObject());
-  });
-
   // send heartbeat
   setKeepAliveRate(kKeepAliveRate);
 }
@@ -276,10 +269,6 @@ ServerProxy::ConnectionResult ServerProxy::parseMessage(const uint8_t *code)
     leave();
   }
 
-  else if (memcmp(code, kMsgCClipboard, 4) == 0) {
-    grabClipboard();
-  }
-
   else if (memcmp(code, kMsgCScreenSaver, 4) == 0) {
     screensaver();
   }
@@ -290,10 +279,6 @@ ServerProxy::ConnectionResult ServerProxy::parseMessage(const uint8_t *code)
 
   else if (memcmp(code, kMsgCInfoAck, 4) == 0) {
     infoAcknowledgment();
-  }
-
-  else if (memcmp(code, kMsgDClipboard, 4) == 0) {
-    setClipboard();
   }
 
   else if (memcmp(code, kMsgCResetOptions, 4) == 0) {
@@ -347,21 +332,6 @@ void ServerProxy::onInfoChanged()
 
   // send info update
   queryInfo();
-}
-
-bool ServerProxy::onGrabClipboard(ClipboardID id)
-{
-  LOG_DEBUG1("sending clipboard %d changed", id);
-  ProtocolUtil::writef(m_stream, kMsgCClipboard, id, m_seqNum);
-  return true;
-}
-
-void ServerProxy::onClipboardChanged(ClipboardID id, const IClipboard *clipboard)
-{
-  std::string data = IClipboard::marshall(clipboard);
-  LOG_DEBUG("sending clipboard %d seqnum=%d", id, m_seqNum);
-
-  StreamChunker::sendClipboard(data, data.size(), id, m_seqNum, m_events, this);
 }
 
 void ServerProxy::flushCompressedMouse()
@@ -522,47 +492,6 @@ void ServerProxy::leave()
 
   // forward
   m_client->leave();
-}
-
-void ServerProxy::setClipboard()
-{
-  // parse
-  static std::string dataCached;
-  ClipboardID id;
-  uint32_t seq;
-
-  auto r = ClipboardChunk::assemble(m_stream, dataCached, id, seq);
-
-  if (r == TransferState::Started) {
-    size_t size = ClipboardChunk::getExpectedSize();
-    LOG_DEBUG("receiving clipboard %d size=%d", id, size);
-  } else if (r == TransferState::Finished) {
-    LOG_DEBUG("received clipboard %d size=%d", id, dataCached.size());
-
-    // forward
-    Clipboard clipboard;
-    clipboard.unmarshall(dataCached, 0);
-    m_client->setClipboard(id, &clipboard);
-
-    LOG_INFO("clipboard was updated");
-  }
-}
-
-void ServerProxy::grabClipboard()
-{
-  // parse
-  ClipboardID id;
-  uint32_t seqNum;
-  ProtocolUtil::readf(m_stream, kMsgCClipboard + 4, &id, &seqNum);
-  LOG_DEBUG("recv grab clipboard %d", id);
-
-  // validate
-  if (id >= kClipboardEnd) {
-    return;
-  }
-
-  // forward
-  m_client->grabClipboard(id);
 }
 
 void ServerProxy::keyDown(uint16_t id, uint16_t mask, uint16_t button, const std::string &lang)

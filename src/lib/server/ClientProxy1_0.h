@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "deskflow/Clipboard.h"
 #include "deskflow/ProtocolTypes.h"
 #include "server/ClientProxy.h"
 
@@ -29,16 +28,12 @@ public:
   ClientProxy1_0 &operator=(ClientProxy1_0 &&) = delete;
 
   // IScreen
-  bool getClipboard(ClipboardID id, IClipboard *) const override;
   void getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const override;
   void getCursorPos(int32_t &x, int32_t &y) const override;
 
   // IClient overrides
   void enter(int32_t xAbs, int32_t yAbs, uint32_t seqNum, KeyModifierMask mask, bool forScreensaver) override;
   bool leave() override;
-  void setClipboard(ClipboardID, const IClipboard *) override;
-  void grabClipboard(ClipboardID) override;
-  void setClipboardDirty(ClipboardID, bool) override;
   void keyDown(KeyID, KeyModifierMask, KeyButton, const std::string &) override;
   void keyRepeat(KeyID, KeyModifierMask, int32_t count, KeyButton, const std::string &) override;
   void keyUp(KeyID, KeyModifierMask, KeyButton) override;
@@ -50,8 +45,6 @@ public:
   void screensaver(bool activate) override;
   void resetOptions() override;
   void setOptions(const OptionsList &options) override;
-  void sendDragInfo(uint32_t fileCount, const char *info, size_t size) override;
-  void fileChunkSending(uint8_t mark, char *data, size_t dataSize) override;
   std::string getSecureInputApp() const override;
   void secureInputNotification(const std::string &app) const override;
 
@@ -64,8 +57,6 @@ protected:
   virtual void resetHeartbeatTimer();
   virtual void addHeartbeatTimer();
   virtual void removeHeartbeatTimer();
-  virtual bool recvClipboard();
-
 private:
   void disconnect();
   void removeHandlers();
@@ -76,21 +67,6 @@ private:
   void handleFlatline();
 
   bool recvInfo();
-  bool recvGrabClipboard();
-
-protected:
-  struct ClientClipboard
-  {
-  public:
-    ClientClipboard() = default;
-
-  public:
-    Clipboard m_clipboard;
-    uint32_t m_sequenceNumber = 0;
-    bool m_dirty = true;
-  };
-
-  ClientClipboard m_clipboard[kClipboardEnd];
 
 private:
   using MessageParser = bool (ClientProxy1_0::*)(const uint8_t *);

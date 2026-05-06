@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include "deskflow/ClipboardTypes.h"
-
-class IClipboard;
+#include <cstdint>
 
 //! Screen interface
 /*!
@@ -20,12 +18,6 @@ class IScreen
 {
 public:
   virtual ~IScreen() = default;
-  struct ClipboardInfo
-  {
-  public:
-    ClipboardID m_id;
-    uint32_t m_sequenceNumber;
-  };
 
   //! @name accessors
   //@{
@@ -35,13 +27,6 @@ public:
   Returns the target used for events created by this object.
   */
   virtual void *getEventTarget() const = 0;
-
-  //! Get clipboard
-  /*!
-  Save the contents of the clipboard indicated by \c id and return
-  true iff successful.
-  */
-  virtual bool getClipboard(ClipboardID id, IClipboard *) const = 0;
 
   //! Get screen shape
   /*!

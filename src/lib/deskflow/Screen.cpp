@@ -183,9 +183,6 @@ bool Screen::leave()
       LOG_ERR("failed to run screen exit command");
   }
 
-  // make sure our idea of clipboard ownership is correct
-  m_screen->checkClipboards();
-
   // now not on screen
   m_entered = false;
 
@@ -202,16 +199,6 @@ void Screen::warpCursor(int32_t x, int32_t y)
 {
   assert(m_isPrimary);
   m_screen->warpCursor(x, y);
-}
-
-void Screen::setClipboard(ClipboardID id, const IClipboard *clipboard)
-{
-  m_screen->setClipboard(id, clipboard);
-}
-
-void Screen::grabClipboard(ClipboardID id)
-{
-  m_screen->setClipboard(id, nullptr);
 }
 
 void Screen::screensaver(bool) const
@@ -389,11 +376,6 @@ void *Screen::getEventTarget() const
   return m_screen;
 }
 
-bool Screen::getClipboard(ClipboardID id, IClipboard *clipboard) const
-{
-  return m_screen->getClipboard(id, clipboard);
-}
-
 void Screen::getShape(int32_t &x, int32_t &y, int32_t &w, int32_t &h) const
 {
   m_screen->getShape(x, y, w, h);
@@ -415,10 +397,7 @@ void Screen::enablePrimary()
 
 void Screen::enableSecondary()
 {
-  // assume primary has all clipboards
-  for (ClipboardID id = 0; id < kClipboardEnd; ++id) {
-    grabClipboard(id);
-  }
+  // do nothing
 }
 
 void Screen::disablePrimary()

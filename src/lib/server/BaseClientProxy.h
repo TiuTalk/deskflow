@@ -55,16 +55,12 @@ public:
 
   // IScreen
   void *getEventTarget() const override = 0;
-  bool getClipboard(ClipboardID id, IClipboard *) const override = 0;
   void getShape(int32_t &x, int32_t &y, int32_t &width, int32_t &height) const override = 0;
   void getCursorPos(int32_t &x, int32_t &y) const override = 0;
 
   // IClient overrides
   void enter(int32_t xAbs, int32_t yAbs, uint32_t seqNum, KeyModifierMask mask, bool forScreensaver) override = 0;
   bool leave() override = 0;
-  void setClipboard(ClipboardID, const IClipboard *) override = 0;
-  void grabClipboard(ClipboardID) override = 0;
-  void setClipboardDirty(ClipboardID, bool) override = 0;
   void keyDown(KeyID, KeyModifierMask, KeyButton, const std::string &) override = 0;
   void keyRepeat(KeyID, KeyModifierMask, int32_t count, KeyButton, const std::string &lang) override = 0;
   void keyUp(KeyID, KeyModifierMask, KeyButton) override = 0;
@@ -76,8 +72,6 @@ public:
   void screensaver(bool activate) override = 0;
   void resetOptions() override = 0;
   void setOptions(const OptionsList &options) override = 0;
-  virtual void sendDragInfo(uint32_t fileCount, const char *info, size_t size) = 0;
-  virtual void fileChunkSending(uint8_t mark, char *data, size_t dataSize) = 0;
   virtual std::string getSecureInputApp() const = 0;
   virtual void secureInputNotification(const std::string &app) const = 0;
   std::string getName() const override;
