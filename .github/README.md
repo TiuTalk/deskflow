@@ -8,7 +8,7 @@
 Use the keyboard, mouse, or trackpad of one computer to control nearby computers,
 and work seamlessly between them.
 It's like a software KVM (but without the video).
-TLS encryption is enabled by default. Wayland is supported. Clipboard sharing is supported.
+TLS encryption is enabled by default. Wayland is supported.
 
 > [!TIP]
 >
@@ -141,11 +141,6 @@ We would love to see compatibility with Lan Mouse. This may be quite an effort a
 We welcome PRs (pull requests) from the community. If you'd like to make a change, please feel
 free to [start a discussion](https://github.com/deskflow/deskflow/discussions) or
 [open a PR](https://github.com/deskflow/deskflow/wiki/Contributing).
-
-### Is clipboard sharing supported?
-
-Absolutely. The clipboard-sharing feature is a cornerstone feature of the product and we are
-committed to maintaining and improving that feature.
 
 ### Is Wayland for Linux supported?
 

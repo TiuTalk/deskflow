@@ -132,7 +132,7 @@ The protocol organizes messages into logical categories:
 |----------|---------|----------|-----------|
 | **[Handshake](@ref protocol_handshake)** | None | Connection setup | @ref kMsgHello, @ref kMsgHelloBack |
 | **[Commands](@ref protocol_commands)** | `C` | Screen control | @ref kMsgCEnter, @ref kMsgCLeave, @ref kMsgCKeepAlive |
-| **[Data](@ref protocol_data)** | `D` | Input events | @ref kMsgDKeyDown, @ref kMsgDMouseMove, @ref kMsgCClipboard, @ref kMsgDClipboard |
+| **[Data](@ref protocol_data)** | `D` | Input events | @ref kMsgDKeyDown, @ref kMsgDMouseMove |
 | **[Queries](@ref protocol_queries)** | `Q` | Information requests | @ref kMsgQInfo |
 | **[Errors](@ref protocol_errors)** | `E` | Error notifications | @ref kMsgEIncompatible, @ref kMsgEBusy |
 
@@ -144,16 +144,12 @@ This table lists all protocol messages in alphabetical order. For a typical sequ
 |---|---|---|---|---|---|---|
 | [**CALV**](@ref kMsgCKeepAlive) | @ref kMsgCKeepAlive | Command | Both | Keep-alive | [MsgSize](#constraint-protocol-max-message-length), [KeepAlive](#constraint-keep-alive) | 1.3+ |
 | [**CBYE**](@ref kMsgCClose) | @ref kMsgCClose | Command | Server→Client | Close connection | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
-| [**CCLP**](@ref kMsgCClipboard) | @ref kMsgCClipboard | Command | Both | Clipboard ownership notification | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
 | [**CIAK**](@ref kMsgCInfoAck) | @ref kMsgCInfoAck | Command | Server→Client | Acknowledge info message | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
 | [**CINN**](@ref kMsgCEnter) | @ref kMsgCEnter | Command | Server→Client | Enter screen | [MsgSize](#constraint-protocol-max-message-length), [ScreenEntrySync](#constraint-screen-entry-sync) | 1.0+ |
 | [**CNOP**](@ref kMsgCNoop) | @ref kMsgCNoop | Command | Both | No operation | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
 | [**COUT**](@ref kMsgCLeave) | @ref kMsgCLeave | Command | Server→Client | Leave screen | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
 | [**CROP**](@ref kMsgCResetOptions) | @ref kMsgCResetOptions | Command | Server→Client | Reset options to defaults | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
 | [**CSEC**](@ref kMsgCScreenSaver) | @ref kMsgCScreenSaver | Command | Server→Client | Screen saver control | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
-| [**DCLP**](@ref kMsgDClipboard) | @ref kMsgDClipboard | Data | Both | Clipboard data | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
-| [**DDRG**](@ref kMsgDDragInfo) | @ref kMsgDDragInfo | Data | Server→Client | Drag file info | [MsgSize](#constraint-protocol-max-message-length), [ListSize](#constraint-max-list) | 1.5+ |
-| [**DFTR**](@ref kMsgDFileTransfer) | @ref kMsgDFileTransfer | Data | Both | File transfer data | [MsgSize](#constraint-protocol-max-message-length) | 1.5+ |
 | [**DINF**](@ref kMsgDInfo) | @ref kMsgDInfo | Data | Client→Server | Screen information | [MsgSize](#constraint-protocol-max-message-length) | 1.0+ |
 | [**DKDL**](@ref kMsgDKeyDownLang) | @ref kMsgDKeyDownLang | Data | Server→Client | Key down with language | [MsgSize](#constraint-protocol-max-message-length), [KeyMap](#constraint-keymap) | 1.8+ |
 | [**DKDN**](@ref kMsgDKeyDown) | @ref kMsgDKeyDown | Data | Server→Client | Key down | [MsgSize](#constraint-protocol-max-message-length), [KeyMap](#constraint-keymap) | 1.1+ |
@@ -286,8 +282,6 @@ A modifier (modifier mask) represents the state of modifier keys (like Shift, Co
 | **1.2** | Jan 2006 | Synergy | Relative mouse movement | 1.2+ |
 | **1.3** | May 2006 | Synergy | Keep-alive (@ref kMsgCKeepAlive), horizontal scroll (@ref kMsgDMouseWheel) | 1.3+ |
 | **1.4** | Nov 2012 | Synergy | Encryption support (@ref SecureSocket) | 1.4+ |
-| **1.5** | Sep 2013 | Synergy | File transfer | 1.5+ |
-| **1.6** | Jan 2014 | Synergy | Clipboard streaming | 1.6+ |
 | **1.7** | Nov 2021 | Synergy | Secure input notifications | 1.7+ |
 | **1.8** | Jun 2025 | Synergy | Language synchronization | 1.8+ |
 
@@ -487,15 +481,6 @@ For platform-specific implementation details, refer to:
 
 ### Advanced Features
 
-- **Clipboard Synchronization**
-  - Clipboard grab notifications
-  - Data transfer (@ref kMsgDClipboard - text, images, HTML)
-  - Streaming for large data (v1.6+)
-
-- **File Transfer** (v1.5+)
-  - Drag-and-drop initiation
-  - Chunked file transfer
-  - Progress tracking
 
 - **Security Features**
   - TLS/SSL encryption (v1.4+)
