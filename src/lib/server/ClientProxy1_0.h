@@ -57,6 +57,7 @@ protected:
   virtual void resetHeartbeatTimer();
   virtual void addHeartbeatTimer();
   virtual void removeHeartbeatTimer();
+
 private:
   void disconnect();
   void removeHandlers();

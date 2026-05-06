@@ -398,7 +398,6 @@ void Client::handleConnected()
   LOG_DEBUG1("connected, waiting for hello");
   cleanupConnecting();
   setupConnection();
-
 }
 
 void Client::handleConnectionFailed(const Event &event)

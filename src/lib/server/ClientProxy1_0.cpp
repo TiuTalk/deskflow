@@ -362,4 +362,3 @@ bool ClientProxy1_0::recvInfo()
   ProtocolUtil::writef(getStream(), kMsgCInfoAck);
   return true;
 }
-
